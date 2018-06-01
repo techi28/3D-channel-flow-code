@@ -1,0 +1,51 @@
+_____________________________________________________________
+                    PROBLEM: STATIC CHANNEL
+_____________________________________________________________
+Runge-Kutta steps (1 or 2)        | FinRK       : 1
+_____________________________________________________________
+Choose the type of save exit file | ChooseExit  : 3  
+_____________________________________________________________
+Tag to restart initial simulation | IrestartIN  : 0
+Tag to restart initial simulation | IrestartOUT : 1
+Name of the output re-start file  | restartout
+Name of the input  re-start file  | restartout0007  
+_____________________________________________________________
+Tag to calculate the pressure     | Ipress   : 1   
+Tag to calculate the solid phase  | Isolid   : 0       
+Tag to calculate the turbulance   | Iturbu   : 0       
+Tag to calculate the input box    | Icase    : 0   
+Tag to calculate the sediment bed | Ibed     : 0   
+_____________________________________________________________
+Initial time                      | tIni     =  0.0   
+Final time                        | tFin     =  80.0
+Time step                         | dt       =  0.0005
+Initial time to save results      | tInisave =  0.0
+Time step to save results         | dtsave   =  5.0
+_____________________________________________________________
+Maximum nolinear iterations (eta) | NmaxCON  =  50        
+Tolerance of the nolinear loop    | tol      =  1.0E-03
+_____________________________________________________________
+LINEAR SOLVER PARAMETERS:      
+Maximum number of iterations      | MaxIters =  3000
+tolerance value                   | eps      =  1.0E-03
+SOR relax value                   | relaxSOR =  1.8
+Dim. of Hessemberg matrix (GMRES) | DimHess  =  20
+Reciprocal of the pesudo-time step| tau      =  0.001  
+Value of the theta-discretization | theta    =  1.0
+Tolerance of the aux. system      | epsNewM  =  1.0E-01
+Maximum iters of the aux. system  | MaxNewM  =  2000
+_____________________________________________________________
+Tag to identify constant depth    | Idepth   : 1     
+Constant depth                    | h0       = 1.0
+_____________________________________________________________
+Tag to read initial condition     | Iinit0   :  1
+Initial value for water level     | wl0      =  9.5
+Initial value for discharges      | qx0      =  0.75          
+Initial value for discharges      | qy0      =  0.0           
+_____________________________________________________________  
+REFERENCE CELL                               :  2881         
+_____________________________________________________________
+Time step to save results         | tInistats=  40.0
+Time step to sample stats         | dtsample =  10
+Time to output averaged results   | dtplane  =  1000
+_____________________________________________________________
