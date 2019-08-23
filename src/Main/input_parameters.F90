@@ -7,8 +7,7 @@
 
 
       SUBROUTINE input_parameters(nbev,hv,h,                     &
-                                  No_vp,No_cp,No_wb,No_hb,No_qb, &
-                                  nbe,xv,yv,zbv)                                       
+                                  No_vp,No_cp,nbe,xv,yv,zbv)
 
 !---------------------------------------------------------------------!
 !                                                                     !
@@ -18,20 +17,17 @@
 !    can be changed without need to compile the program again. We     !
 !    also perform some operations with this data:                     !
 !        1)   Tagging the BC:    -  nbev                              !
-!        2)   Depth:             -  hv                                !   
+!        2)   Depth:             -  hv                                !
 !                                                                     !
 !---------------------------------------------------------------------!
 !                                                                     !
 !    Output variables:                                                !
 !   _______________________________________________________________   !
-!  |     Name    |    Size   | Description                         |  !  
-!  |_____________|___________|_____________________________________|  !   
+!  |     Name    |    Size   | Description                         |  !
+!  |_____________|___________|_____________________________________|  !
 !  |             |           |                                     |  !
 !  | --> No_vp   |(N_CELL0,3)| Index number of the 3 cell vertices |  !
 !  | --> No_cp   |(N_CELL,3) | Index number of surrounding 3 cells |  !
-!  | --> No_wb   | N_WB      | Vertex number of wall boundary      |  !
-!  | --> No_qb   | N_QB      | Vertex number of discharge boundary |  !
-!  | --> No_hb   | N_HB      | Vertex number of wate surface bound.|  !
 !  | --> nbe     | N_CELL0   | Type of boundary cell (inside or bc)|  !
 !  | --> xv      | N_VERT    | x-coordinate of the vertex          |  !
 !  | --> yv      | N_VERT    | y-coordinate of the vertex          |  !
@@ -45,36 +41,31 @@
 !                                                                     !
 !    Common parameters used:                                          !
 !   _______________________________________________________________   !
-!  |   Name       |                 Description                    |  !  
-!  |______________|________________________________________________|  !   
+!  |   Name       |                 Description                    |  !
+!  |______________|________________________________________________|  !
 !  |              |                                                |  !
 !  |--- N_CELL0   | Number of the cell centers inside the domain   |  !
 !  |--- N_CELL    | Total number of the cells                      |  !
 !  |--- N_VERT    | Number of the computing vertices               |  !
 !  |--- N_CELLmax | Maximum number of cells                        |  !
 !  |--- N_VERTmax | maximum Number of vertices                     |  !
-!  |--- N_WBmax   | Maximum number of N_WB                         |  !
-!  |--- N_QBmax   | Maximum number of N_QB                         |  !
-!  |--- N_HBmax   | Maximumnumber of  N_HB                         |  !
 !  |______________|________________________________________________|  !
 !                                                                     !
 !    Common variables modified:                                       !
 !   _______________________________________________________________   !
-!  |   Name    |                 Description                       |  !  
-!  |___________|___________________________________________________|  !   
+!  |   Name    |                 Description                       |  !
+!  |___________|___________________________________________________|  !
 !  |           |                                                   |  !
 !  | * IPRESS  | Tag to calculate the pressure                     |  !
-!  | * ISOLID  | Tag to calculate the solid phase                  |  !
 !  | * ITURBU  | Tag to calculate the turbulance                   |  !
 !  | * ICASE   | Tag to about the release box                      |  !
-!  | * IBED    | Tag about the granular bed option                 |  !
 !  |___________|___________________________________________________|  !
 !  | * tFin    | Final simulation time                             |  !
 !  | * tIni    | Initial simulation time                           |  !
 !  | * dt      | Time step                                         |  !
 !  | * dtprint | Step for printing the result output               |  !
 !  | * tcomin  | Step for printing                                 |  !
-!  |___________|___________________________________________________|  ! 
+!  |___________|___________________________________________________|  !
 !  | ChooseExit|  Choice of the exit format                        |  !
 !  |           |  = 1 only tecplot: V-**.tec                       |  !
 !  |           |  = 2 tecplot: V-**.tec, C-**.tec, VC-***.tec      |  !
@@ -88,13 +79,6 @@
 !  | * eps     | Tolerance of the linear system                    |  !
 !  |___________|___________________________________________________|  !
 !  | * NBC     | Number of boundary values                         |  !
-!  | * N_WB    | Number of the vertices on the wall boundary       |  !
-!  | * N_HB    | Number of the vertices on the water level boundary|  !
-!  | * N_QB    | Number of the vertices on discharge normal bound. |  !
-!  |___________|___________________________________________________|  !
-!  | * IRESTART| Tag for the initial simulation                    |  !
-!  | filerepout| Name of the output file                           |  ! 
-!  | filerepin | Name of the input file                            |  ! 
 !  |___________|___________________________________________________|  !
 !  | * ZBV     | Bottom levels at each vertex                      |  !
 !  |___________|___________________________________________________|  !
@@ -111,9 +95,9 @@
 !                                                                     !
 !    Local parameters & variables:                                    !
 !   _______________________________________________________________   !
-!  |   Name      |                 Description                     |  !  
+!  |   Name      |                 Description                     |  !
 !  |_____________|_________________________________________________|  !
-!  | IDISPLAY    | Display the data at the windows                 |  !             
+!  | IDISPLAY    | Display the data at the windows                 |  !
 !  |_____________|_________________________________________________|  !
 !                                                                     !
 !   -->  Input variables                                              !
@@ -148,23 +132,20 @@
             USE geometry
             implicit none
 #     endif
-!     =============== END ================    
-!     ====================================  
+!     =============== END ================
+!     ====================================
 !     ____________________________________
 !    |                                    |
 !    |     Declaration of variables       |
 !    |____________________________________|
 
-      integer,dimension(:)  :: nbev       
+      integer,dimension(:)  :: nbev
       real*8 ,dimension(:)  :: h
       real*8 ,dimension(:)  :: hv
 !     ------------------------------
       integer,dimension(:,:):: No_vp
       integer,dimension(:,:):: No_cp
-      integer,dimension(:)  :: No_wb 
-      integer,dimension(:)  :: No_qb
-      integer,dimension(:)  :: No_hb 
-      integer,dimension(:)  :: nbe   
+      integer,dimension(:)  :: nbe
       real*8 ,dimension(:)  :: xv
       real*8 ,dimension(:)  :: yv
       real*8 ,dimension(:)  :: zbv
@@ -173,11 +154,15 @@
 !    |   Declaration of local variables   |
 !    |____________________________________|
 
-      integer k1,k2,k3,kv1,kv2,kk,ii
-      integer,parameter :: IDISPLAY = 0
+      integer :: k1,k2,k3,kv1,kv2,kk,nvg
+      integer :: count1,count2,count3,count4
+      integer:: IDISPLAY = 0
       real*8 :: funh
       character*80 title
-      character*80 line      
+      character*80 line
+#     ifdef KeyParallel
+      integer,dimension(:),allocatable :: ccount_global
+#     endif
 
 !     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #     ifdef KeyDbg
@@ -200,29 +185,25 @@
 !     __________________________________________________________      !
 !     Runge-Kutta steps (1 or 2)             | FinRK       : 1        !
 !     __________________________________________________________      !
-!     Choose the type of save exit file      | ChooseExit : 2         !  
-!     __________________________________________________________      !
-!     Tag for initial simulation             | IrestartIN : 0         !
-!     Tag for initial simulation             | IrestartOUT: 0         !
-!     Name of the restart output file        | restartout             !
-!     Name of the restart input file         | restartin              !
+!     Choose the type of save exit file      | ChooseExit : 2         !
 !     __________________________________________________________      !
 !     Tag to calculate the pressure          | IPRESS  :  1           !
-!     Tag to calculate the solid phase       | ISOLID  :  1           !
 !     Tag to calculate the turbulance        | ITURBU  :  0           !
-!     Tag to calculate the input box         | ICASE   :  1           ! 
-!     Tag to calculate the sediment bed      | IBED    :  0           !
+!     Tag to calculate the input box         | ICASE   :  1           !
 !     __________________________________________________________      !
-!     Initial time simulation                | tIni    =  3000.0      ! 
+!     Initial time simulation                | tIni    =  3000.0      !
 !     Final time simulation                  | tFin    =  3000.0      !
-!     Time step                              | dt      =  0.005       ! 
-!     Initial time to save output results    | tInisave=  50.         !    
+!     Time step                              | dt      =  0.005       !
+!     Initial time to save output results    | tInisave=  50.         !
 !     Time step to save output results       | dsave   =  50.         !
+!     Time step to take stats sample         | dtsample=  50          !
+!     Time step to output plane average      | dtplane =  50          !
+!     Time limit for the simulation          | tlimit  =  50          !
 !     ___________________________________________________________     !
 !     Maximum Nolinear iterations (eta)      | NmaxCON =  50          !
 !     Tolerance of the nolinear system       | TOL     =  1D-1        !
 !     ___________________________________________________________     !
-!     LINEAR SOLVER PARAMETERS:                                       !      
+!     LINEAR SOLVER PARAMETERS:                                       !
 !     Maximum number of iterations           | MaxIters =  20000      !
 !     Tolerance value                        | eps      =  1.0E-05    !
 !     SOR relax value                        | relaxSOR =  1.3        !
@@ -248,36 +229,15 @@
 !     __________________________________________________________      !
 !     REFERENCE CELL                                  :  2881         !
 !     __________________________________________________________      !
-!     Time step to save results              | dtsave   =  0.0        !
-!     Time step to sample stats              | dtsample =  10         !
-!     Time to output averaged results        | dtplane  =  10         !
-!     __________________________________________________________      !
 !                                                                     !
 !                                                                     !
 !---------------------------------------------------------------------!
-
-!     ________________________________
-#     if defined(KeyEstuaryGironde)
-         open(13,file='EstuaryGironde/dataParameters.txt',status='OLD')
-!     ________________________________
-#     elif defined(KeyStaticCylinder)
-         open(13,file='StaticCylinder/dataParameters.txt',status='OLD')
-!     ________________________________
-#     elif defined(KeyStaticChannel)
-         open(13,file='StaticChannel/dataParameters.txt',status='OLD')
-!     ________________________________
-#     elif defined(KeyStandingWave)
-         open(13,file='StandingWave/dataParameters.txt',status='OLD')
-!     ________________________________
-#     elif defined(KeyTaylorVortex)
-         open(13,file='TaylorVortex/dataParameters.txt',status='OLD')
-!     ________________________________
-#     elif defined(KeyTestOnlyPoisson)
-         open(13,file='TestOnlyPoisson/dataParameters.txt',status='OLD')
-!     ________________________________
+#     ifdef KeyParallel
+      if(rang_topo .eq. 0) IDISPLAY = 1
 #     else
-         open(13,file='dataParameters.txt',status='OLD')
+       IDISPLAY = 1
 #     endif
+      open(13,file='dataParameters.txt',status='OLD')
 
 71    format(A62)
 72    format(A25)
@@ -289,20 +249,11 @@
 
 !      ________________________________________________________
 !     |                                                        |
-!     |  Read: Title                                           |
+!     |                  Runge-Kutta time steps                |
 !     |________________________________________________________|
 
       read(13,71) line
       if (IDISPLAY.eq.1) write(*,71) line
-      read(13,74) title
-      if (IDISPLAY.eq.1) write(*,*)  title
-!      ________________________________________________________
-!     |                                                        |
-!     |                  Runge-Kutta time steps                |
-!     |________________________________________________________|
-
-      read(13,71) line	
-      if (IDISPLAY.eq.1) write(*,71) line 
 !     --------------------------------------------------
 !     Read: RK-1 or RK-2
       read(13,78) title,FinRK
@@ -312,169 +263,138 @@
 !     |                   Type of saving data                  |
 !     |________________________________________________________|
 
-      read(13,71) line	
-      if (IDISPLAY.eq.1) write(*,71) line 
+      read(13,71) line
+      if (IDISPLAY.eq.1) write(*,71) line
 !     --------------------------------------------------
 !     Read: Tag to choose initial simulation
       read(13,78) title,ChooseExit
       if (IDISPLAY.eq.1) write(*,78) title,ChooseExit
 !      ________________________________________________________
 !     |                                                        |
-!     |                Re-start time simulation                |
-!     |________________________________________________________|
-
-      read(13,71) line	
-      if (IDISPLAY.eq.1) write(*,71) line 
-!     --------------------------------------------------
-!     Read: Tag to choose initial simulation
-      read(13,78) title,IrestartIN
-      if (IDISPLAY.eq.1) write(*,78) title,IrestartIN
-!     --------------------------------------------------
-!     Read: Tag to save final simulation
-      read(13,78) title,IrestartOUT
-      if (IDISPLAY.eq.1) write(*,78) title,IrestartOUT
-
-!     --------------------------------------------------
-!     Read:  About the starting file (time) of the simulation
-      read(13,'(a36,25a)') title,filerepout
-      if (IDISPLAY.eq.1) write(*,'(a36,25a)') title,filerepout
-      if (IRESTARTOUT.eq.0) then
-          read(13,71) title 
-      else
-          read(13,'(a36,25a)') title,filerepin
-          if (IDISPLAY.eq.1) write(*,'(a36,25a)') title,filerepin
-      endif
-!      ________________________________________________________
-!     |                                                        |
 !     |  Read: Tags to calcule the pressure & solid phase      |
 !     |________________________________________________________|
 
-      read(13,71) line	
+      read(13,71) line
       if (IDISPLAY.eq.1) write(*,71) line
 !     --------------------------------------------------
-!     Tag to calculate the pressure   
+!     Tag to calculate the pressure
       read(13,73) title,IPRESS
       if (IDISPLAY.eq.1) write(*,73) title,IPRESS
 !     --------------------------------------------------
-!     Tag to calculate the solid phase   
-      read(13,73) title,ISOLID
-      if (IDISPLAY.eq.1) write(*,73) title,ISOLID
-!     --------------------------------------------------
-!     Tag to calculate the turbulance   
+!     Tag to calculate the turbulance
       read(13,73) title,ITURBU
       if (IDISPLAY.eq.1) write(*,73) title,ITURBU
 !     --------------------------------------------------
-!     Tag about the release box   
+!     Tag about the release box
       read(13,73) title,ICASE
       if (IDISPLAY.eq.1) write(*,73) title,ICASE
 !     --------------------------------------------------
-!     Tag about the granular bed option   
-      read(13,73) title,IBED
-      if (IDISPLAY.eq.1) write(*,73) title,IBED
+!     Tag about the hydrostatic pressure option
+      read(13,73) title,IHYDRO
+      if (IDISPLAY.eq.1) write(*,73) title,IHYDRO
 !      ________________________________________________________
 !     |                                                        |
 !     |  Read: Time variables                                  |
 !     |________________________________________________________|
 
-      read(13,71) line	
-      if (IDISPLAY.eq.1) write(*,71) line  
+      read(13,71) line
+      if (IDISPLAY.eq.1) write(*,71) line
 !     --------------------------------------------------
-!     Read: Initial time 
+!     Read: Initial time
       read(13,76) title,tIni
       if (IDISPLAY.eq.1) write(*,77) title,tIni
 !     --------------------------------------------------
-!     Read: Final time     
+!     Read: Final time
       read(13,76) title,tFin
       if (IDISPLAY.eq.1) write(*,77) title,tFin
 !     --------------------------------------------------
-!     Read: Time Step   
+!     Read: Time Step
       read(13,76) title,dt
       if (IDISPLAY.eq.1) write(*,77) title,dt
 !     --------------------------------------------------
-!     Read: Initial time to start saving results 
+!     Read: Time step interval to check CFL
+      read(13,73) title,ncfl
+      if (IDISPLAY.eq.1) write(*,73) title,ncfl
+!     --------------------------------------------------
+!     Read: Initial time to start saving results
       read(13,76) title,tInisave
       if (IDISPLAY.eq.1) write(*,77) title,tInisave
 !     --------------------------------------------------
-!     Read: Time step to save results        
+!     Read: Time step to save results
       read(13,76) title,dtsave
       if (IDISPLAY.eq.1) write(*,77) title,dtsave
-
-!      ________________________________________________________
-!     |                                                        |
-!     |          Convergence parameters: Nonlinear loop        |
-!     |________________________________________________________|
-
+!     --------------------------------------------------
+!     Read: Time step to take stats sample
+      read(13,73) title,dtsample
+      if (IDISPLAY.eq.1) write(*,73) title,dtsample
+!     --------------------------------------------------
+!     Read: Time step to output averaged stats
+      read(13,73) title,dtplane
+      if (IDISPLAY.eq.1) write(*,73) title,dtplane
+!     --------------------------------------------------
+!     Read: Time limit
+      read(13,73) title,tlimit
+      if (IDISPLAY.eq.1) write(*,73) title,tlimit
+!     --------------------------------------------------
+!     Read: Reynolds number
+      read(13,76) title,Re
+      if (IDISPLAY.eq.1) write(*,77) title,Re
 80    format(A46,E9.2)
 81    format(A47,E9.2)
-
-      read(13,71) line	
-      if (IDISPLAY.eq.1) write(*,71) line  
+!      ________________________________________________________
+!     |                                                        |
+!     |               External body force options              |
+!     |________________________________________________________|
+      read(13,71) line
+      if (IDISPLAY.eq.1) write(*,71) line
+      read(13,74) title
+      if (IDISPLAY.eq.1) write(*,71) title
 !     --------------------------------------------------
-!     Read: Maximum number of nonlinear iterations eta 
-      read(13,73) title,NmaxCONV
-      if (IDISPLAY.eq.1) write(*,73) title,NmaxCONV
+!     Read: bdx
+      read(13,76) title,bdx
+      if (IDISPLAY.eq.1) write(*,77) title,bdx
 !     --------------------------------------------------
-!     Read: Tolerance of eta loop                       
-      read(13,80) title,tol
-      if (IDISPLAY.eq.1) write(*,81) title,tol
-
+!     Read: bdy
+      read(13,76) title,bdy
+      if (IDISPLAY.eq.1) write(*,77) title,bdy
+!     --------------------------------------------------
+!     Read: bdz
+      read(13,76) title,bdz
+      if (IDISPLAY.eq.1) write(*,77) title,bdz
 !      ________________________________________________________
 !     |                                                        |
 !     |               Linear system parameters                 |
 !     |________________________________________________________|
 
-      read(13,71) line	
-      if (IDISPLAY.eq.1) write(*,71) line  
+      read(13,71) line
+      if (IDISPLAY.eq.1) write(*,71) line
       read(13,74) title
       if (IDISPLAY.eq.1) write(*,71) title
 !     --------------------------------------------------
-!     Read: Maximum number of linear iterations       
-      read(13,73) title,MaxIters  
-      if (IDISPLAY.eq.1) write(*,73) title,MaxIters  
+!     Read: Maximum number of linear iterations
+      read(13,73) title,MaxIters
+      if (IDISPLAY.eq.1) write(*,73) title,MaxIters
 !     --------------------------------------------------
 !     Read: Tolerance of the linear system loop
       read(13,80) title,eps
       if (IDISPLAY.eq.1) write(*,81) title,eps
-      !read(13,74) title
-      !read(13,*)  eps
-      !if (IDISPLAY.eq.1) write(*,77) title,eps
 !     --------------------------------------------------
 !     Read: SOR relax value
       read(13,76) title,relaxSOR
       if (IDISPLAY.eq.1) write(*,77) title,relaxSOR
-!     --------------------------------------------------
-!     Read: Heseinberg matrix dimention (GMRES)
-      read(13,73) title,DimHess
-      if (IDISPLAY.eq.1) write(*,73) title,DimHess
-!     --------------------------------------------------
-!     Read: Reciprocal of the pesudo-time step                       
-      read(13,76) title,ttau
-      if (IDISPLAY.eq.1) write(*,77) title,ttau
-!     --------------------------------------------------
-!     Read: Value of the theta-discretization
-      read(13,76) title,ttheta
-      if (IDISPLAY.eq.1) write(*,77) title,ttheta
-!     --------------------------------------------------
-!     Read: Stop tolerance of the iterations
-      read(13,80) title,epsConv
-      if (IDISPLAY.eq.1) write(*,81) title,epsConv
-!     --------------------------------------------------
-!     Read: Maximum number of iterations
-      read(13,73) title,MaxConv
-      if (IDISPLAY.eq.1) write(*,73) title,MaxConv
 !      ________________________________________________________
 !     |                                                        |
 !     |  Read: Constant depth                                  |
 !     |________________________________________________________|
 
-      read(13,71) line	
-      if (IDISPLAY.eq.1) write(*,71) line  
+      read(13,71) line
+      if (IDISPLAY.eq.1) write(*,71) line
 !     --------------------------------------------------
-!     Read: Simulation duration in second (final time)     
+!     Read: Simulation duration in second (final time)
       read(13,73) title,IDEPTH
       if (IDISPLAY.eq.1) write(*,73) title,IDEPTH
 !     --------------------------------------------------
-!     Read: Initial time 
+!     Read: Initial time
       read(13,76) title,h0
       if (IDISPLAY.eq.1) write(*,77) title,h0
 !      ________________________________________________________
@@ -482,64 +402,38 @@
 !     |   Read: Initial condition                              |
 !     |________________________________________________________|
 
-      read(13,71) line	
+      read(13,71) line
       if (IDISPLAY.eq.1) write(*,71) line
 !     --------------------------------------------------
-!     Read: Tag initial condition                            
+!     Read: Tag initial condition
       read(13,73) title,Iinit0
       if (IDISPLAY.eq.1) write(*,73) title,Iinit0
 !     --------------------------------------------------
 !     Read: Initial value for water level and discharges
-      if (Iinit0.ne.0) then
-	 read(13,76)  title,wl0
-	 if (IDISPLAY.eq.1) write(*,77)  title,wl0
-	 read(13,76)  title,qx0
-	 if (IDISPLAY.eq.1) write(*,77)  title,qx0
-	 read(13,76)  title,qy0
-	 if (IDISPLAY.eq.1) write(*,77)  title,qy0
-      else
-	 wl0 = 0.0d0
-	 qx0 = 0.0d0
-	 qy0 = 0.0d0
-      endif
+        if (Iinit0.ne.0) then
+            read(13,76)  title,wl0
+            if (IDISPLAY.eq.1) write(*,77)  title,wl0
+            read(13,76)  title,qx0
+            if (IDISPLAY.eq.1) write(*,77)  title,qx0
+            read(13,76)  title,qy0
+            if (IDISPLAY.eq.1) write(*,77)  title,qy0
+        else
+            wl0 = 0.0d0
+            qx0 = 0.0d0
+            qy0 = 0.0d0
+        endif
 !      ________________________________________________________
 !     |                                                        |
 !     |       Reference cell                                   |
 !     |________________________________________________________|
 
-      read(13,71) line	
-      if (IDISPLAY.eq.1) write(*,71) line 
-      read(13,73) title,NC_REF
-      if (IDISPLAY.eq.1) write(*,73) title,NC_REF
-      read(13,71) line	
-      if (IDISPLAY.eq.1) write(*,71) line
-
-!      ________________________________________________________
-!     |                                                        |
-!     |   Read: Time Statistics                                |
-!     |________________________________________________________|
-
-#     ifdef KeySaveStatistics
-!     - - - - - - - - - - - - - - - - - - - - - - - - - 
-!     --------------------------------------------------
-!     Read: Initial time 
-      read(13,76) title,tInistats
-      if (IDISPLAY.eq.1) write(*,77) title,tInistats
-!     --------------------------------------------------
-!     Read: Final time     
-      read(13,73) title,dtsample
-      if (IDISPLAY.eq.1) write(*,73) title,dtsample
-!     --------------------------------------------------
-!     Read: Time Step   
-      read(13,73) title,dtplane
-      if (IDISPLAY.eq.1) write(*,73) title,dtplane
-!     --------------------------------------------------
-      read(13,71) line	
-      if (IDISPLAY.eq.1) write(*,71) line
-!     - - - - - - - - - - - - - - - - - - - - - - - - -
-#     endif
-      if (IDISPLAY.eq.1) write(*,*)'      '
-
+        read(13,71) line
+        if (IDISPLAY.eq.1) write(*,71) line
+        read(13,73) title,NC_REF
+        if (IDISPLAY.eq.1) write(*,73) title,NC_REF
+        read(13,71) line
+        if (IDISPLAY.eq.1) write(*,71) line
+        if (IDISPLAY.eq.1) write(*,*)'      '
 !      ________________________________________________________
 !     |                                                        |
 !     |                         Close                          |
@@ -553,42 +447,91 @@
 !       Performing and assigning values with the load data            !
 !                                                                     !
 !*********************************************************************!
-
 !      ________________________________________________________
 !     |                                                        |
 !     |   Tagging the type of vertex (inside or boundary type) |
 !     |________________________________________________________|
+#     ifdef KeyParallel
+!        ----------------------------------------
+!        In case of parallel mode
+!        Ensure the local vertex bc is the same as global value
+         do nv=1,N_VERT
+            nvg = index_globalv(nv)
+            nbev(nv) = nbev_global(nvg)
+         enddo
 
-!     --------------------------------------------------
-!     Inside vertex                             nbev = 0
-      do nv=1,N_VERT
-         nbev(nv)=0
-      enddo
-!     --------------------------------------------------
-!     Wall boundary                             nbev = 1
-      if (N_WB.ne.0) then
-         do i=1,N_WB
-            nv=No_wb(i)
-            nbev(nv)=1
-         enddo
-      endif
-!     --------------------------------------------------
-!     Inflow boundary                           nbev = 2
-      if (N_QB.ne.0) then
-         do i=1,N_QB
-            nv=No_qb(i)
-            nbev(nv)=2
-         enddo
-      endif
-!     --------------------------------------------------
-!     OutFlow boundary                          nbev = 3
-      if (N_HB.ne.0) then
-        do i=1,N_HB
-           nv=No_hb(i)
-           nbev(nv)=3
+        allocate(ccount_global(N_CELL0global))
+
+        do i=1,N_CELL0global
+             ccount_global(i) = 0
         enddo
-      endif
-            
+
+        if(NZLayer .eq. 1) then
+            do i=1,N_CELL0
+                    nc = index_global(i)
+                    ccount_global(nc) = ccount_global(nc) +1
+            enddo
+
+            do nv=1,N_VERT
+                nvg = index_globalv(nv)
+                vcount_global(nvg) = vcount_global(nvg) + 1
+            enddo
+        endif
+!     ---------------------------------------------------
+!      Obtain the vcount_global for overlapping vertex
+        call MPI_Barrier(comm3D,code)
+        call SUM_Paralleli(vcount_global,N_VERTglobal)
+        call SUM_Paralleli(ccount_global,N_CELL0global)
+!     ---------------------------------------------------
+!      Check the global count
+         IF(IDisplay .eq. 1) THEN
+          count1 = 0
+          count2 = 0
+          count3 = 0
+          count4 = 0
+          do nv=1,N_VERTglobal
+             if(vcount_global(nv) .eq. 1) count1 = count1 +1
+             if(vcount_global(nv) .eq. 2) count2 = count2 +1
+             if(vcount_global(nv) .eq. 3) count3 = count3 +1
+             if(vcount_global(nv) .gt. 3) then
+                count4 = count4+1
+             endif
+          enddo
+        print*, '       ==============================='
+        print*, '             GLOBAL VERTEX INFO'
+        print*, '       ==============================='
+        print*, '             TOTAL VERTEX :',N_VERTglobal
+        print*, '                 1  PROC  :',count1
+        print*, '                 2  PROC  :',count2
+        print*, '                 3  PROC  :',count3
+        print*, '                >3  PROC  :',count4
+        print*, '       ==============================='
+!       ------------------------------------------------
+!        for center
+          count1 = 0
+          count2 = 0
+          count3 = 0
+          do i=1,N_CELL0global
+             if(ccount_global(i) .eq. 0) count1 = count1 +1
+             if(ccount_global(i) .eq. 1) count2 = count2 +1
+             if(ccount_global(i) .gt. 1) count3 = count3 +1
+          enddo
+        print*, '       ==============================='
+        print*, '             GLOBAL CENTER INFO'
+        print*, '       ==============================='
+        print*, '             TOTAL CENTER :',N_CELL0global
+        print*, '                 0  PROC  :',count1
+        print*, '                 1  PROC  :',count2
+        print*, '                >1  PROC  :',count3
+        print*, '       ==============================='
+
+        ENDIF
+!      ----------------------------------------------------
+!       wait for output to finish
+        call MPI_Barrier(comm3D,code)
+        deallocate(ccount_global)
+#     endif
+
 !      ________________________________________________________
 !     |                                                        |
 !     |                           Depth                        |
@@ -597,39 +540,43 @@
 !      __________________________________
 !     |                                  |
 !     |          At the vertices         |
-!     |__________________________________| 
+!     |__________________________________|
 
 !     ------------------------------------
-!     Constant depth 
-      if (iDEPTH.eq.1) then        
+!     Constant depth
+      if (iDEPTH.eq.1) then
           do nv=1,N_VERT
              hv(nv) = h0
           enddo
 !     ------------------------------------
-!     Depth from data 
+!     Depth from data
       else
+          if (IDISPLAY.eq.1) then
+           print*, '      WARNING! DEPTH DATA FROM FUNCTION.'
+          endif
 	  do nv=1,N_VERT
             hv(nv)= zbv(nv)
+            hv(nv) = 0. !<----Function h (depth)
 	  enddo
-      endif 
+      endif
 !      __________________________________
 !     |                                  |
 !     |        At the cell centers       |
-!     |__________________________________| 
+!     |__________________________________|
 
       do i=1,N_CELL0
-	 k1=No_vp(i,1)
-	 k2=No_vp(i,2)
-	 k3=No_vp(i,3)
-	 h(i) = (hv(k1)+hv(k2)+hv(k3))/3.0d0
+         k1=No_vp(i,1)
+         k2=No_vp(i,2)
+         k3=No_vp(i,3)
+         h(i) = (hv(k1)+hv(k2)+hv(k3))/3.0d0
       enddo
 
 !     ====================================
 !     =====  START PARALLEL OPTION =======
 #     ifdef KeyParallel
          call communication2D(h)
-#     endif	
-!     =============== END ================    
+#     endif
+!     =============== END ================
 !     ====================================
 
 !*********************************************************************!
