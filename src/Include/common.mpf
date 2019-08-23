@@ -1,0 +1,356 @@
+!wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww!
+!---------------------------------------------------------------------!
+!                     FILE OF COMMON VARIABLES                        !
+!                             Jan 2013                                !
+!---------------------------------------------------------------------!
+!wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww!
+!                                                                     !
+!      In this file we will describe all the common variables         !
+!      that we need in the program. This variables are divided        !
+!      in the following sections:                                     !
+!             -   Geometry related                                    !
+!             -   Time related                                        !
+!             -   Pressure calculation                                !
+!             -   Linear system solver                                !
+!             -   Printing                                            !
+!---------------------------------------------------------------------!
+
+
+!wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww!
+!                     Choose the general problem                      !
+!wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww!
+
+
+#     include "cppdefs.h"
+
+      real*8, parameter :: pi  = 3.14159265359d0
+      real*8, parameter :: gra = 9.8100d+00
+!---------------------------------------------------------------------!
+!     ChooseDomBox     = 1 Domain [a,b]x[c,d]x[sigIni,sigFin]         !
+!                      = 0 General domain (must sigIni=0, sigFin=1)   !
+!     sigIni           = real Initial vertical value                  !
+!     sigFin           = real Final vertical value                    !
+!     XDIni            = real Initial streamwise value                !
+!     XDFin            = real Final streamwise value                  !
+!     YDIni            = real Initial spanwise value                  !
+!     YDFin            = real Final spanwise value                    !
+!     XPB              = 1 Periodic BC in streamwise direction        !
+!                      = 0                                            !
+!     YPB              = 1 Periodic BC in spanwise direction          !
+!                      = 0                                            !
+!     TopBC            = 0 No slip wall                               !
+!                      = 1 Free slip wall                             !
+!                      = 2 Free surface                               !
+!                      = 3 Special for Cavity Test case               !
+!     BotBC            = 0 No slip wall                               !
+!                      = 1 Free slip wall                             !
+!     XBC              = 0 No slip wall                               !
+!                      = 1 Free slip wall                             !
+!                      = 2 Inflow and outflow                         !
+!     YBC              = 0 No slip wall                               !
+!                      = 1 Free slip wall                             !
+!     ChooseBoundary   = 1 Manually set boundary condition            !
+!                      = 0 Use input info from BlueKenue (data.txt)   !
+!     PressureMethod   = 1 Projection method                          !
+!                      = 2 Direct method by Migual(Use with caution)  !
+!---------------------------------------------------------------------!
+
+!     _____________________________________________
+      integer,parameter :: FunctionExample = 0
+      integer,parameter :: ChooseBoundary  = 1
+      integer,parameter :: PressureMethod  = 1
+!     _____________________________________________
+      integer,parameter :: ChooseDomBox    = 1 ! =1 Rigid surface
+      real*8, parameter :: sigIni =  0.0d0
+      real*8, parameter :: sigFin =  1.0d0
+      real*8, parameter :: XDIni =   0.0d0
+      real*8, parameter :: XDFin =   0.0d0
+      real*8, parameter :: YDIni =   0.0d0
+      real*8, parameter :: YDFin =   0.0d0
+!     _______________________________________________________
+!     Select Periodic BC (X streamwise Y spanwise)
+      integer,parameter :: XPB = 1
+      integer,parameter :: YPB = 1
+      integer,parameter :: ZPB = 0
+!     ________________________________________________________
+!     Select Top and Bottom BC
+      integer,parameter :: TopBC = 1
+      integer,parameter :: BotBC = 0
+      integer,parameter :: XBC = 0
+      integer,parameter :: YBC = 1
+!     ________________________________________________________
+!     Options for Development Use
+      integer,parameter :: I3D = 1 ! 0 for 2D; 1 for 3D
+      integer,parameter :: IStats = 0 ! 1 gather time averaged stats
+!     ________________________________________________________
+!     Adam-Bashforth 2nd order time stepping
+      integer :: time_ab2 = 1 !  Use AB2 time stepping
+!     ________________________________________________________
+!     Partition of NZ (for parallel only)
+      integer ::  NZBlock = 2 ! divide NZ into several partitions
+!     ________________________________________________________
+!     Tag for sample points
+      integer :: ppp1,ppp2,ppp3
+
+!wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww!
+!              Divisions in the vertical direction: NN                !
+!wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww!
+      integer,parameter:: NN = 0
+!wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww!
+!               GLOBAL domain and geometry parameters                 !
+!wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww!
+!---------------------------------------------------------------------!
+!     NZglobal      : Global number of points (vertex) in the z-direc.!
+!     N_VERTglobal  : Number of the computing vertices                !
+!     N_CELL0global : Number of the cells centers inside the domain   !
+!---------------------------------------------------------------------!
+      integer,parameter:: NZglobal = NN+2
+      integer :: N_VERTglobal
+      integer :: N_CELL0global
+!     ====================================
+!     ==========  SEQUENTIAL =============
+#     ifndef KeyParallel
+         integer,parameter:: N_CELLghostMAX = 100*NN
+#     endif
+!     =============== END ================
+!     ====================================
+!wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww!
+!                LOCAL domain and geometry parameters                 !
+!wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww!
+!---------------------------------------------------------------------!
+!     NZ       : Number of points in the z-direction                  !
+!     N_VERT   : Number of the computing vertices                     !
+!     N_CELL0  : Number of the cells centers inside the domain        !
+!     N_CELL   : Total number of the cell centers                     !
+!---------------------------------------------------------------------!
+!     N_BC     : Total number of boundary values                      !
+!---------------------------------------------------------------------!
+!     N_CELLextra  : Number of overlaping cell-centers (parallel)     !
+!     N_CELLghost  : Number of exact ghost cell-centers               !
+!     N_CELLexact  : = N_CELL0 + N_CELLghost                          !
+!     TagBCu       : Tag for U Velocity Field                         !
+!     TagBCv       : Tag for V Velocity Field                         !
+!     TagBCw       : Tag for W Velocity Field                         !
+!     TagBCp       : Tag for Pressure Field                           !
+!---------------------------------------------------------------------!
+      integer :: NZ
+      integer :: N_VERT
+      integer :: N_CELL0
+      integer :: N_CELL
+      integer :: N_BC
+!     ----------------------
+      integer :: N_CELLextra
+      integer :: N_CELLghost
+      integer :: N_CELLexact
+!     ----------------------
+      integer :: Numictec
+!     ----------------------
+      integer :: TagBCu = 1
+      integer :: TagBCv = 2
+      integer :: TagBCw = 3
+      integer :: TagBCp = 0
+
+!wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww!
+!                    INPUT DATA: parameters & tags                    !
+!wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww!
+
+!---------------------------------------------------------------------!
+!     ________________________________________________________        !
+!     TAGS TO DEFINE THE PROBLEM                                      !
+!                                                                     !
+!       Ipress   : Calculate the pressure                             !
+!                  = 1   BICGSTAB SOLVER with preconditioner          !
+!                  = 2   SOR solver or Jacobi solver                  !
+!       Iturbu   : Calculate the turbulance                           !
+!                  = 0   No turbulance calculation                    !
+!                  = 1   Large Eddy Simulation model                  !
+!                  = 2   Reynolds avergaed Navier Stokes (RANS)       !
+!       Icase    : Calculate ws & alphas in the release box           !
+!                  = 0   Do not impose release box                    !
+!                  = 1   Update values of the release box             !
+!                  = 1   Set a region of granular bed in the bottom   !
+!       Ihydro   : Impose the hydrostatic option                      !
+!                  = 0   Hydrodynamic pressure only                   !
+!                  = 2   Hydrostatic pressure only                    !
+!                  = 1   Both                                         !
+!       Idepth   : Impose constant depth of the domain                !
+!                  = 0   Read a file with the bottom profile          !
+!                  = 1   Use constant depth with value h0             !
+!       Iinit0   : Impose boundary initial condition                  !
+!                  = 0   read data file with bdy values               !
+!                  = 1   read homogeneous values of wlo,qxo,qyo       !
+!     ________________________________________________________        !
+!     TIME                                                            !
+!                                                                     !
+!      tFin     : Final simulation time                               !
+!      tIni     : Initial simulation time                             !
+!      dt       : Time step                                           !
+!      tsave    : Time step for printing output results               !
+!      tInisave : Initial time to start printing                      !
+!      dtsample : Sample the stats every N steps                      !
+!      dtplane  : Save plane averaged stats every N steps             !
+!      tlimit   : Limit of CPU time                                   !
+!     ________________________________________________________        !
+!     TOLERANCE AND MAXIMUM ITERTAIONS                                !
+!                                                                     !
+!      tol       : Tolerance of the nolinear loop                     !
+!      MaxIters  : Maximum linear system iterations                   !
+!      eps       : Tolerance of the system solution                   !
+!     ________________________________________________________        !
+!     EXTERNAL BODY FORCE(for hydrodynamic case only)                 !
+!                                                                     !
+!      bdx       : Streamwise direction                               !
+!      bdy       : Spanwise direction                                 !
+!      bdz       : Vertical direction                                 !
+!     ________________________________________________________        !
+!     INITIAL HOMOGENEOUS BDY VALUES & CONSTANT DEPTH                 !
+!                                                                     !
+!      wl0      : Initial values for water level                      !
+!      qx0      : Initial values for discharges qx                    !
+!      qy0      : Initial values for discharges qy                    !
+!      h0       : Constant depth                                      !
+!---------------------------------------------------------------------!
+
+      integer :: Ipress
+      integer :: Iturbu
+      integer :: Icase
+      integer :: Ihydro
+      integer :: Iinit0
+      integer :: Idepth
+!     ----------------------
+      real*8 :: tFin,tIni,dt,dtsave,tInisave
+      integer :: dtsample,dtplane,tlimit
+!     ----------------------
+      real*8 :: bdx,bdy,bdz
+!     ----------------------
+      character*80 :: filerepin,filerepout
+!     ----------------------
+      integer :: ChooseExit,FinRK,ncfl
+!     ----------------------
+      integer :: NmaxCONV,MaxIters,MaxConv
+      integer :: DimHess
+      real*8  :: tol,eps
+      real*8  :: relaxSOR,tPrevious
+      real*8  :: ttau,ttheta,epsConv
+      real*8  :: tPoisson,tnsmp
+!     ----------------------
+      real*8  :: h0
+      real*8  :: wl0,qx0,qy0
+
+!wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww!
+!                         INITIAL PARAMETRES                          !
+!wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww!
+
+!---------------------------------------------------------------------!
+!      ________________________________________________________       !
+!      GENERAL PARAMETRES                                             !
+!                                                                     !
+!       pi        : 3.14159....                                       !
+!       gra       : gravity = 9.81                                    !
+!       rho_s     : Homogeneous density of the solid                  !
+!       rho_f     : Homogeneous density of the fluid                  !
+!       visco_f   : Homogeneous viscosity of the fluid                !
+!       alphasmin : Minimum alpha_s                                   !
+!       alphasmax : Maximum alpha_s                                   !
+!       pa        : atmospheric pressure                              !
+!       Re        : Reynolds number                                   !
+!     ________________________________________________________        !
+!     INITIAL CONDITIONS OF THE RELEASE BOX                           !
+!                                                                     !
+!      ChooseREGION  : Choose mesh                                    !
+!      ChooseCASE    : Choose the problem parameters                  !
+!      ChoosePROFILE : Choose injection profile                       !
+!                                                                     !
+!      xRegMin       : x coodinate west box boundary                  !
+!      xRegMax       : x coodinate east box boundary                  !
+!      yRegMin       : y coodinate south box boundary                 !
+!      yRegMax       : y coodinate north box boundary                 !
+!      kRegMin       : k index of the bottom box                      !
+!      kRegMax       : k index of the top box                         !
+!      xcReg         : xc coordinate of the circle center             !
+!      ycReg         : yc coordinate of the circle center             !
+!      rReg          : radius of the circle                           !
+!      Aini          : initial volumen fraction                       !
+!      Wini          : initial velocity ws                            !
+!      rs            : Radius of the particules                       !
+!      drejet        : Diameter of the release                        !
+!      cini          : Concentration of the release                   !
+!      vrejet        : Volume of the release                          !
+!      rmassrejet    : Mass of the release                            !
+!---------------------------------------------------------------------!
+
+      real*8 :: pa,Re
+      real*8 :: alphasmin,alphasmax
+      real*8 :: rho_f,rho_s
+      real*8 :: visco_f
+!     -----------------------------
+      integer :: ChooseREGION
+      integer :: ChooseCASE
+      integer :: ChoosePROFILE
+      integer :: kRegMin,kRegMax
+      real*8  :: xRegMin,xRegMax
+      real*8  :: yRegMin,yRegMax
+      real*8  :: xcReg,ycReg,rReg
+      real*8  :: Aini,Winj
+      real*8  :: rs,drejet,cini,vrejet,rmassrejet
+
+!wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww!
+!                   General integers and reals                        !
+!wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww!
+
+!---------------------------------------------------------------------!
+!                                                                     !
+!       nv,nc,i,j,k : Loop counters                                   !
+!       time        : Counting time variable                          !
+!       LastTimeSave: Time used to save data files                    !
+!       SaveCounter : Integer that counts the number of save results  !
+!       dissipmin,energmin : Turbulance parameters                    !
+!---------------------------------------------------------------------!
+
+      integer :: SaveCounter,nstep,scount
+      integer :: i,j,k,nc,nv,nc_ref
+!     --------------------------
+      real*8  :: time,LastTimeSave
+      real*8  :: dissipmin,energmin
+
+!wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww!
+!                                                                     !
+!                              COMMONS                                !
+!                                                                     !
+!wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww!
+
+!     --------------------------------------------------
+      common/coo/NZ,N_VERT,N_CELL0,N_CELL,           &
+                 N_CELLghost,N_CELLextra,N_CELLexact,&
+                  N_BC,N_VERTglobal,N_CELL0global
+!     --------------------------------------------------
+      common/times/tFin,tIni,dt,tInisave,dtsave,&
+                   LastTimeSave,time,tlimit
+!     --------------------------------------------------
+      common/charac/filerepout,filerepin
+!     --------------------------------------------------
+      common/initi/wl0,qx0,qy0,h0
+!     --------------------------------------------------
+      common/tags/Ipress,Idepth,Icase,Iturbu,&
+                  Iinit0,ChooseExit
+!     --------------------------------------------------
+      common/convINTE/NmaxCONV,MaxIters,MaxConv,DimHess
+      common/convREAL/tol,eps,epsConv,ttau,ttheta,relaxSOR
+!     --------------------------------------------------
+      common/initialPara/pa,Re,alphasmin,alphasmax,rho_f,rho_s,visco_f
+      common/maskINT/ChooseREGION,ChooseCASE,ChoosePROFILE,&
+                       kRegMin,kRegMax
+      common/maskREA/xRegMin,xRegMax,yRegMin,yRegMax,aini,winj,&
+                       rs,drejet,cini,vrejet,rmassrejet
+!     --------------------------------------------------
+      common/integ/SaveCounter,Numictec,nc_ref,FinRK
+      common/pakeps/dissipmin,energmin
+!     =============== END ================
+!     ====================================
+
+!wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww!
+!                                                                     !
+!                                 END                                 !
+!                                                                     !
+!wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww!
+
